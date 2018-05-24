@@ -14,8 +14,10 @@ import java.util.*;
 import java.text.*;
 
 class MainFrame implements TreeWillExpandListener,TreeSelectionListener
-{
-	private String language[] = {"English","한국어"};
+{	
+	private FView View;
+	private String error = "디스크 혹은 파일을 찾을수 없습니다.\n 혹은 불가능한 접근경로입니다.";
+	private String language[] = {"한국어","English"};
 	private JFrame frame = new JFrame("파일 탐색기");
  	private Container con = null;
 
@@ -30,17 +32,44 @@ class MainFrame implements TreeWillExpandListener,TreeSelectionListener
  	private JPanel pSouth=new JPanel();
  	private JPanel northText=new JPanel();
  	private JLabel northLabel=new JLabel("경  로");
- 	private JLabel southLabel=new JLabel("File  Explorer");
+ 	private JLabel southLabel=new JLabel("파일  관리자");
  	private JTextField pathText=new JTextField();
  	private JComboBox<String> langchk=new JComboBox<String>(language);
  
  	private Dimension dim,dim1;
  	private int xpos,ypos;
-
+ 	
+ 	private JPopupMenu rPopup = new JPopupMenu("");
+ 	
 MainFrame()
 	{
 		  init();
 		  start();
+		  langchk.setSelectedIndex(0);
+		  langchk.addActionListener(new ActionListener() {
+			  public void actionPerformed(ActionEvent e) {
+				    String lang = (String)langchk.getSelectedItem();
+				    if (lang.equals("한국어")) {
+				   	 	northLabel.setText("경  로");
+				    	southLabel.setText("파일  관리자");
+				    	root.setUserObject("내컴퓨터");
+				    	error = "디스크 혹은 파일을 찾을수 없습니다.\n 혹은 불가능한 접근경로입니다.";
+				    	tree.repaint();
+				    	frame.setTitle("파일 탐색기");
+				    	ATable.title = new String[] {"이름", "크기","수정한 날짜"};
+				    }
+				    else if (lang.equals("English")) {
+				    	northLabel.setText("Location");
+				    	southLabel.setText("File  Manager");
+				    	root.setUserObject("My PC");
+				    	error = "Can't fine Disk or File \n or can't access directory";
+				    	tree.repaint();
+				    	frame.setTitle("File Explorer");
+				    	ATable.title = new String[]{"Name", "Size","Modified"};
+				    }
+				}
+		  });
+
 		  frame.setSize(800,600);
 		  dim=Toolkit.getDefaultToolkit().getScreenSize();
 		  dim1=frame.getSize();
@@ -73,7 +102,7 @@ void init()
   for(int i=0;i<list.length;++i)
   {
 	   temp=new DefaultMutableTreeNode(list[i].getPath());
-	   temp.add(new DefaultMutableTreeNode("없음"));
+	   temp.add(new DefaultMutableTreeNode("X"));
 	   root.add(temp);
   }
 	  tree=new JTree(root);
@@ -89,8 +118,8 @@ void init()
  {
 	  tree.addTreeWillExpandListener(this);
 	  tree.addTreeSelectionListener(this);
+	  
  }
-
 public static void main(String args[])
 {
 	  new MainFrame();
@@ -151,7 +180,7 @@ public static void main(String args[])
 				       		{
 				       			if(inTemp.isDirectory() && !inTemp.isHidden())
 				       			{
-				       				tempChild.add(new DefaultMutableTreeNode("없음"));
+				       				tempChild.add(new DefaultMutableTreeNode("X"));
 				       				break;
 				       			}
 				       		}
@@ -161,7 +190,7 @@ public static void main(String args[])
 	    }
 	   	catch(Exception ex)
 	    {
-	     JOptionPane.showMessageDialog(frame, "디스크 혹은 파일을 찾을수 없습니다.");
+	     JOptionPane.showMessageDialog(frame, error);
 	    
 	    }
 	}
@@ -178,12 +207,13 @@ public static void main(String args[])
 	  try
 	  {
 	    pathText.setText(getPath(e));
-	    pRight=new FView(getPath(e)).getTablePanel();
+	    View = new FView(getPath(e));
+	    pRight= View.getTablePanel();
 	    pMain.setRightComponent(pRight);
 	  }
 	  catch(Exception ex)
    {
-    JOptionPane.showMessageDialog(frame, "디스크 혹은 파일을 찾을수 없습니다.");
+    JOptionPane.showMessageDialog(frame, error);
    }
   }
  }
@@ -213,7 +243,9 @@ class FView
  void init(){
   pMain.add(pCenter,"Center");
  }
-
+ ATable getATable() {
+	 return at;
+ }
  void start(String strPath)
  {
   file=new File(strPath);
@@ -232,7 +264,13 @@ class FView
       break;
      case 1:
       if(list[i].isFile())
-       at.setValueAt(Long.toString((long)Math.round(size/1024.0))+"Kb",i,j);
+    	  if((long)Math.round(size)>1024)
+    		  at.setValueAt(Long.toString((long)Math.round(size/1024.0))+"KB",i,j);
+    	  if((long)Math.round(size/1024.0)>1024)
+    		  at.setValueAt(Long.toString(Math.round(size/1024.0/1024.0))+"MB",i,j);
+    	  if(1024>(long)Math.round(size));
+    		  
+    		  
       break;
      case 2:
       at.setValueAt(getFormatString(time),i,j);
@@ -268,7 +306,7 @@ class FView
 
 class ATable extends AbstractTableModel
 {
- private String title[]={"이름", "크기","수정한 날짜"};
+ static String title[]={"이름","크기","수정한 날짜"};
  private String val[][]=new String[1][3];
  
  public void setValueArr(int i)
@@ -282,6 +320,10 @@ class ATable extends AbstractTableModel
  public int getColumnCount()
  {
   return val[0].length;
+ }
+ public void setColumnName(String[] e)
+ {
+	 title = e;
  }
  public String getColumnName(int column )
  {
