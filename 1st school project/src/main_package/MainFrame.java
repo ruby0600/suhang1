@@ -16,7 +16,11 @@ import java.text.*;
 class MainFrame implements TreeWillExpandListener,TreeSelectionListener
 {	
 	private FView View;
+	private ATable ATable;
 	private String error = "디스크 혹은 파일을 찾을수 없습니다.\n 혹은 불가능한 접근경로입니다.";
+	private String Copy = "복사 ";
+	private String Paste = "붙여넣기";
+	private String Delete = "삭제";
 	private String language[] = {"한국어","English"};
 	private JFrame frame = new JFrame("파일 탐색기");
  	private Container con = null;
@@ -39,7 +43,10 @@ class MainFrame implements TreeWillExpandListener,TreeSelectionListener
  	private Dimension dim,dim1;
  	private int xpos,ypos;
  	
- 	private JPopupMenu rPopup = new JPopupMenu("");
+ 	static JPopupMenu rPopup = new JPopupMenu();
+ 	private JMenuItem copyMenu = new JMenuItem(Copy);
+    private JMenuItem pasteMenu = new JMenuItem(Paste);
+    private JMenuItem deleteMenu = new JMenuItem(Delete);
  	
 MainFrame()
 	{
@@ -56,7 +63,10 @@ MainFrame()
 				    	error = "디스크 혹은 파일을 찾을수 없습니다.\n 혹은 불가능한 접근경로입니다.";
 				    	tree.repaint();
 				    	frame.setTitle("파일 탐색기");
+				    	Copy = "복사";
+				    	Paste = "붙여넣기";
 				    	ATable.title = new String[] {"이름", "크기","수정한 날짜"};
+				    	Delete = "삭제";
 				    }
 				    else if (lang.equals("English")) {
 				    	northLabel.setText("Location");
@@ -65,11 +75,13 @@ MainFrame()
 				    	error = "Can't fine Disk or File \n or can't access directory";
 				    	tree.repaint();
 				    	frame.setTitle("File Explorer");
+				    	Copy = "Copy";
+				    	Paste = "Paste";
 				    	ATable.title = new String[]{"Name", "Size","Modified"};
+				    	Delete = "Delete";
 				    }
 				}
 		  });
-
 		  frame.setSize(800,600);
 		  dim=Toolkit.getDefaultToolkit().getScreenSize();
 		  dim1=frame.getSize();
@@ -86,7 +98,27 @@ void init()
 	con = frame.getContentPane();
 	con.setLayout(new BorderLayout());
 	pSouth.setLayout(new BorderLayout());
-	
+	rPopup.add(copyMenu);
+	rPopup.add(pasteMenu);
+	rPopup.add(deleteMenu);
+	copyMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_MASK));
+    pasteMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_MASK));
+    deleteMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE));
+    copyMenu.addActionListener(new ActionListener() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub  
+		}
+	});
+    pasteMenu.addActionListener(new ActionListener() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+	});
 	pathText.setPreferredSize(new Dimension(600,20));
 	northText.add(northLabel);
 	northText.add(pathText);
@@ -238,6 +270,41 @@ class FView
  FView(String str){
   init();
   start(str);
+  jt.addMouseListener(new MouseListener() {
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getButton() ==3) //마우스 오른쪽 버튼이면
+        {
+			MainFrame.rPopup.show((Component)e.getSource(), e.getX(), e.getY());
+        }
+	}
+});
  }
 
  void init(){
